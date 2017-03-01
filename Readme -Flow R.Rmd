@@ -1,0 +1,95 @@
+
+
+
+## Part I
+### _Data Inspection_
+
+#more info about files:
+
+file.info("snp_position.txt", extra_cols = TRUE)
+file.info("fang_et_al_genotypes.txt", extra_cols = TRUE)
+
+# First, need to read the data file: 
+genot <- read.table("fang_et_al_genotypes.txt", header = TRUE)
+snp <- read.table("snp_position.txt", header = TRUE)
+snp_dff <- data_frame(snp)
+################################ couple comand to get data frame
+maizetr = data.frame(t(maize))
+
+maizetr = data.frame(t(maize), col.names=FALSE, stringsAsFactors = FALSE)
+names(maizetr) <- maizetr[1,]
+df <- data.frame(matrix(unlist(maizetr)))
+#to see the file
+typeof(maizetr)
+head (maizetr[ ,1:4])
+##############################
+# to see what type it is:
+typeof(genot)
+[1] "list"
+typeof(snp)
+[1] "list"
+
+# in order to see better the file - will use package "dplyr"
+library(dplyr)
+
+genot_df <- tbl_df(genot)
+snp_df <- tbl_df(snp)
+
+genot_df
+## A tibble: 2,782 × 986
+
+snp_df
+# A tibble: 983 × 15
+
+### _Data Processing_
+# will create data frame for Maize by selecting in Groups and write into file
+maize <- filter(genot_df, Group == 'ZMMIL' | Group == 'ZMMLR' | Group == 'ZMMMR')
+write.table(maizetr, file="maze_transf.txt",sep="\t", row.names=TRUE, col.names=TRUE)
+#similar for teosinte
+teosinte <- filter(genot_df, Group == 'ZMPBA' | Group == 'ZMPIL' | Group == 'ZMPJA')
+write.table(teosintetr, file="teosinte_transf.txt",sep="\t", row.names=TRUE, col.names=TRUE)
+
+#Rename I column'
+colnames(maize)[1] <- "SNP_ID"
+colnames(teosinte)[1] <- "SNP_ID"
+
+
+head(maize)
+head (maize[ ,1:4]) # to see only I 4 columns
+
+# I cleaned column in excel and read as df again
+mtr <- read.table("maze_transf_cleam.txt", header = TRUE)
+ttr <- read.table("teosinte_transf_clean.txt", header = TRUE)
+
+# now can merge with SNP for MAIZE
+total <- merge(mtr,snp,by="SNP_ID")
+total_df <- tbl_df(total)
+write.table(total, file="maize_j.txt", sep="\t", row.names=FALSE, col.names=TRUE)
+# Now will save 10 files with increasing order
+
+b <- c(1:10)
+
+for (b in 1:10)
+{
+d <- filter(total_df, Chromosome == b) 
+arrange(d, desc(Position))
+file <- as.character(paste("file", b, ".txt"))
+write.table(d, file, sep="\t", row.names=FALSE, col.names=TRUE)
+}
+
+# Same for Teosinte
+# now can merge with SNP for Te
+totalteos <- merge(ttr,snp,by="SNP_ID")
+totalteos_df <- tbl_df(totalteos)
+write.table(totalteos, file="teosinte_j.txt", sep="\t", row.names=FALSE, col.names=TRUE)
+# Now will save 10 files with increasing order
+
+b <- c(1:10)
+
+for (b in 1:10)
+{
+  d <- filter(totalteos_df, Chromosome == b) 
+  arrange(d, desc(Position))
+  file <- as.character(paste("file", b, "t.txt"))
+  write.table(d, file, sep="\t", row.names=FALSE, col.names=TRUE)
+}
